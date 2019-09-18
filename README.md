@@ -10,3 +10,9 @@ PR: [Otus-DevOps-2019-08/students#24](https://github.com/Otus-DevOps-2019-08/stu
 ChatOps: интеграция GitHub, Travis CI и Slack.  
 PR: [Otus-DevOps-2019-08/ftaskaev_infra#1](https://github.com/Otus-DevOps-2019-08/ftaskaev_infra/pull/1)
 
+## Lesson 5: homework 1
+GCE: Bastion Host, Pritunl VPN.
+
+bastion_IP = 35.210.119.1  
+someinternalhost_IP = 10.132.0.4
+
