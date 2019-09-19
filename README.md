@@ -63,6 +63,7 @@ mbp-feodor:~ me$ curl -v https://35-210-119-1.sslip.io 2>&1 | awk 'BEGIN { cert=
 
 ## Lesson 6: homework 4
 GCE: автоматизация при помощи gcloud.  
+Работа выполнялась на CentOS 7, скрипты установкли лежат в `cloud-testapp/centos7/`.  
 PR: [Otus-DevOps-2019-08/ftaskaev_infra#3](https://github.com/Otus-DevOps-2019-08/ftaskaev_infra/pull/4)
 
 testapp_IP = 35.240.75.50  

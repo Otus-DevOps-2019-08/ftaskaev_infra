@@ -1,14 +1,10 @@
 #!/bin/bash
-sudo tee /etc/yum.repos.d/mongodb-org-3.2.repo << EOF
-[mongodb-org-3.2]
-name=MongoDB Repository
-baseurl=https://repo.mongodb.org/yum/redhat/7/mongodb-org/3.2/x86_64/
-gpgcheck=1
-enabled=1
-gpgkey=https://www.mongodb.org/static/pgp/server-3.2.asc
-EOF
+sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv EA312927
+sudo bash -c 'echo "deb http://repo.mongodb.org/apt/ubuntu xenial/mongodb-org/3.2 multiverse" > /etc/apt/sources.list.d/mongodb-org-3.2.list'
 
-sudo yum -y install mongodb-org
+sudo apt update
+sudo apt install -y mongodb-org
+
 sudo systemctl start mongod
 sudo systemctl enable mongod
 
