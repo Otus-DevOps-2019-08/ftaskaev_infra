@@ -17,6 +17,9 @@ PR: [Otus-DevOps-2019-08/ftaskaev_infra#3](https://github.com/Otus-DevOps-2019-0
 bastion_IP = 35.210.119.1  
 someinternalhost_IP = 10.132.0.4
 
+<details>
+  <summary>Основное задание</summary>
+
 Для подключения к VM необходимо настроить `~/.ssh/config`:
 ```
 Host bastion
@@ -30,8 +33,11 @@ Host internal
  ForwardAgent yes
  ProxyCommand ssh me@bastion -W %h:%p
 ```
+</details>
 
-### Дополнительное задание
+<details>
+  <summary>Дополнительное задание</summary>
+
 Сгенерировать валидный сертификат для домена 35-210-119-1.sslip.io:
 ```console
 [me@bastion ~]$ sudo yum install certbot
@@ -60,6 +66,7 @@ mbp-feodor:~ me$ curl -v https://35-210-119-1.sslip.io 2>&1 | awk 'BEGIN { cert=
 * Connection state changed (MAX_CONCURRENT_STREAMS updated)!
 * Connection #0 to host 35-210-119-1.sslip.io left intact
 ```
+</details>
 
 ## Lesson 6: homework 4
 GCE: автоматизация при помощи gcloud.  
@@ -69,7 +76,9 @@ PR: [Otus-DevOps-2019-08/ftaskaev_infra#3](https://github.com/Otus-DevOps-2019-0
 testapp_IP = 35.240.75.50  
 testapp_port = 9292
 
-### Дополнительное задание
+<details>
+  <summary>Дополнительное задание</summary>
+
 Создать VM с CentOS 7 и установить необходимое ПО с помощью [startup-script](https://gist.github.com/ftaskaev/20d92458978807c2ab7caa358ec29e43):
 ```console
 gcloud compute instances create reddit-ap \
@@ -89,4 +98,5 @@ gcloud compute firewall-rules create default-puma-server \
     --allow=tcp:9292 \
     --target-tags=puma-server
 ```
+</details>
 
