@@ -70,7 +70,6 @@ mbp-feodor:~ me$ curl -v https://35-210-119-1.sslip.io 2>&1 | awk 'BEGIN { cert=
 
 ## Lesson 6: homework 4
 GCE: автоматизация при помощи gcloud.  
-Работа выполнялась на CentOS 7, скрипты установкли лежат в `cloud-testapp/centos7/`.  
 PR: [Otus-DevOps-2019-08/ftaskaev_infra#3](https://github.com/Otus-DevOps-2019-08/ftaskaev_infra/pull/4)
 
 testapp_IP = 35.240.75.50  
@@ -79,12 +78,12 @@ testapp_port = 9292
 <details>
   <summary>Дополнительное задание</summary>
 
-Создать VM с CentOS 7 и установить необходимое ПО с помощью [startup-script](https://gist.github.com/ftaskaev/20d92458978807c2ab7caa358ec29e43):
+Создать VM с Ubuntu 16.04 LTS и установить необходимое ПО с помощью [startup-script](https://gist.github.com/ftaskaev/20d92458978807c2ab7caa358ec29e43):
 ```console
 gcloud compute instances create reddit-ap \
     --boot-disk-size=10GB \
-    --image-family centos-7 \
-    --image-project=centos-cloud \
+    --image-family ubuntu-1604-lts \
+    --image-project==ubuntu-os-cloud \
     --machine-type=g1-small \
     --tags puma-server \
     --restart-on-failure \
