@@ -40,8 +40,8 @@ Host internal
 
 Сгенерировать валидный сертификат для домена 35-210-119-1.sslip.io:
 ```console
-[me@bastion ~]$ sudo yum install certbot
-[me@bastion ~]$ sudo certbot certonly --standalone \
+$ sudo yum install certbot
+$ sudo certbot certonly --standalone \
 >                       --register-unsafely-without-email \
 >                       --preferred-challenges http \
 >                       -d 35-210-119-1.sslip.io
@@ -49,7 +49,7 @@ Host internal
 
 Проверить установленный сертификат:
 ```console
-mbp-feodor:~ me$ curl -v https://35-210-119-1.sslip.io 2>&1 | awk 'BEGIN { cert=0 } /^\* SSL connection/ { cert=1 } /^\*/ { if (cert) print }'
+$ curl -v https://35-210-119-1.sslip.io 2>&1 | awk 'BEGIN { cert=0 } /^\* SSL connection/ { cert=1 } /^\*/ { if (cert) print }'
 * SSL connection using TLSv1.2 / ECDHE-ECDSA-AES128-GCM-SHA256
 * ALPN, server accepted to use h2
 * Server certificate:
@@ -70,7 +70,7 @@ mbp-feodor:~ me$ curl -v https://35-210-119-1.sslip.io 2>&1 | awk 'BEGIN { cert=
 
 ## Lesson 6: homework 4
 GCE: автоматизация при помощи gcloud.  
-PR: [Otus-DevOps-2019-08/ftaskaev_infra#3](https://github.com/Otus-DevOps-2019-08/ftaskaev_infra/pull/4)
+PR: [Otus-DevOps-2019-08/ftaskaev_infra#4](https://github.com/Otus-DevOps-2019-08/ftaskaev_infra/pull/4)
 
 testapp_IP = 35.240.75.50  
 testapp_port = 9292
@@ -80,7 +80,7 @@ testapp_port = 9292
 
 Создать VM с Ubuntu 16.04 LTS и установить необходимое ПО с помощью [startup-script](https://gist.github.com/ftaskaev/20d92458978807c2ab7caa358ec29e43):
 ```console
-gcloud compute instances create reddit-ap \
+$ gcloud compute instances create reddit-ap \
     --boot-disk-size=10GB \
     --image-family ubuntu-1604-lts \
     --image-project==ubuntu-os-cloud \
@@ -92,7 +92,7 @@ gcloud compute instances create reddit-ap \
 
 Создать правило фильтрации для тэга puma-server:
 ```console
-gcloud compute firewall-rules create default-puma-server \
+$ gcloud compute firewall-rules create default-puma-server \
     --description="Allow traffic to puma-server" \
     --allow=tcp:9292 \
     --target-tags=puma-server
