@@ -17,6 +17,9 @@ PR: [Otus-DevOps-2019-08/ftaskaev_infra#3](https://github.com/Otus-DevOps-2019-0
 bastion_IP = 35.210.119.1  
 someinternalhost_IP = 10.132.0.4
 
+<details>
+  <summary>Основное задание</summary>
+
 Для подключения к VM необходимо настроить `~/.ssh/config`:
 ```
 Host bastion
@@ -30,12 +33,15 @@ Host internal
  ForwardAgent yes
  ProxyCommand ssh me@bastion -W %h:%p
 ```
+</details>
 
-### Дополнительное задание
+<details>
+  <summary>Дополнительное задание</summary>
+
 Сгенерировать валидный сертификат для домена 35-210-119-1.sslip.io:
 ```console
-[me@bastion ~]$ sudo yum install certbot
-[me@bastion ~]$ sudo certbot certonly --standalone \
+$ sudo yum install certbot
+$ sudo certbot certonly --standalone \
 >                       --register-unsafely-without-email \
 >                       --preferred-challenges http \
 >                       -d 35-210-119-1.sslip.io
@@ -43,7 +49,7 @@ Host internal
 
 Проверить установленный сертификат:
 ```console
-mbp-feodor:~ me$ curl -v https://35-210-119-1.sslip.io 2>&1 | awk 'BEGIN { cert=0 } /^\* SSL connection/ { cert=1 } /^\*/ { if (cert) print }'
+$ curl -v https://35-210-119-1.sslip.io 2>&1 | awk 'BEGIN { cert=0 } /^\* SSL connection/ { cert=1 } /^\*/ { if (cert) print }'
 * SSL connection using TLSv1.2 / ECDHE-ECDSA-AES128-GCM-SHA256
 * ALPN, server accepted to use h2
 * Server certificate:
@@ -60,22 +66,24 @@ mbp-feodor:~ me$ curl -v https://35-210-119-1.sslip.io 2>&1 | awk 'BEGIN { cert=
 * Connection state changed (MAX_CONCURRENT_STREAMS updated)!
 * Connection #0 to host 35-210-119-1.sslip.io left intact
 ```
+</details>
 
 ## Lesson 6: homework 4
 GCE: автоматизация при помощи gcloud.  
-Работа выполнялась на CentOS 7, скрипты установкли лежат в `cloud-testapp/centos7/`.  
-PR: [Otus-DevOps-2019-08/ftaskaev_infra#3](https://github.com/Otus-DevOps-2019-08/ftaskaev_infra/pull/4)
+PR: [Otus-DevOps-2019-08/ftaskaev_infra#4](https://github.com/Otus-DevOps-2019-08/ftaskaev_infra/pull/4)
 
 testapp_IP = 35.240.75.50  
 testapp_port = 9292
 
-### Дополнительное задание
-Создать VM с CentOS 7 и установить необходимое ПО с помощью [startup-script](https://gist.github.com/ftaskaev/20d92458978807c2ab7caa358ec29e43):
+<details>
+  <summary>Дополнительное задание</summary>
+
+Создать VM с Ubuntu 16.04 LTS и установить необходимое ПО с помощью [startup-script](https://gist.github.com/ftaskaev/20d92458978807c2ab7caa358ec29e43):
 ```console
-gcloud compute instances create reddit-ap \
+$ gcloud compute instances create reddit-ap \
     --boot-disk-size=10GB \
-    --image-family centos-7 \
-    --image-project=centos-cloud \
+    --image-family ubuntu-1604-lts \
+    --image-project==ubuntu-os-cloud \
     --machine-type=g1-small \
     --tags puma-server \
     --restart-on-failure \
@@ -84,9 +92,51 @@ gcloud compute instances create reddit-ap \
 
 Создать правило фильтрации для тэга puma-server:
 ```console
-gcloud compute firewall-rules create default-puma-server \
+$ gcloud compute firewall-rules create default-puma-server \
     --description="Allow traffic to puma-server" \
     --allow=tcp:9292 \
     --target-tags=puma-server
+```
+</details>
+
+## Lesson 7: homework 5
+Packer: подготовка образовов для ускорения развёртывания VM.  
+PR: [Otus-DevOps-2019-08/ftaskaev_infra#4](https://github.com/Otus-DevOps-2019-08/ftaskaev_infra/pull/5)
+
+### Основное задание
+Собран образ `reddit-base-1569407504` на основе Ubuntu 16.04 LTS с предустановленными Ruby и MongoDB.
+```console
+$ gcloud compute images list --no-standard-images
+NAME                    PROJECT                   FAMILY       DEPRECATED  STATUS
+reddit-base-1569407504  ************************  reddit-base              READY
+```
+
+### Дополнительное задание
+Создан образ `reddit-full-1569408139` на основе созданного ранее `reddit-base-1569407504` с предустановленными reddit server.  
+
+```console
+$ gcloud compute images list --no-standard-images
+NAME                    PROJECT                   FAMILY       DEPRECATED  STATUS
+reddit-base-1569407504  ************************  reddit-base              READY
+reddit-full-1569408139  ************************  reddit-full              READY
+```
+
+Добавлен скрипт `create-redditvm.sh` для развёртывания VM из созданного образа.
+
+```console
+$ config-scripts/create-redditvm.sh
+Created [https://www.googleapis.com/compute/v1/projects/************************/zones/europe-west1-d/instances/reddit-ap].
+NAME       ZONE            MACHINE_TYPE  PREEMPTIBLE  INTERNAL_IP  EXTERNAL_IP  STATUS
+reddit-ap  europe-west1-d  f1-micro                   10.132.0.46  34.76.12.56  RUNNING
+```
+```console
+$ curl -I 34.76.12.56:9292
+HTTP/1.1 200 OK
+Content-Type: text/html;charset=utf-8
+X-XSS-Protection: 1; mode=block
+X-Content-Type-Options: nosniff
+X-Frame-Options: SAMEORIGIN
+Set-Cookie: rack.session=BAh7CEkiD3Nlc3Npb25faWQGOgZFVEkiRTgzZjI4MTZmOGE4YmZhZTg5YTQy%0AMGU0MWRkNzBiNmQ2MmYwZDdmZDY2MjA0ZDBlOTU5YWM4YjEyYzA4NzI5ZDUG%0AOwBGSSIJY3NyZgY7AEZJIjE1MVAwNWdBRGc2UEUzVi8vcGpQUU0yVUFzQjlU%0AOTZoYWplUk5GVHpPczJJPQY7AEZJIg10cmFja2luZwY7AEZ7B0kiFEhUVFBf%0AVVNFUl9BR0VOVAY7AFRJIi01NmMxYTdkOWI2YjdjZjUyMTdkNTk1YjM4MjVm%0AZDc4MjI5MmIyNGNjBjsARkkiGUhUVFBfQUNDRVBUX0xBTkdVQUdFBjsAVEki%0ALWRhMzlhM2VlNWU2YjRiMGQzMjU1YmZlZjk1NjAxODkwYWZkODA3MDkGOwBG%0A--24740450230e9707b810bbaadb995e84a828a484; path=/; HttpOnly
+Content-Length: 1861
 ```
 
