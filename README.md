@@ -103,15 +103,20 @@ $ gcloud compute firewall-rules create default-puma-server \
 Packer: подготовка образовов для ускорения развёртывания VM.  
 PR: [Otus-DevOps-2019-08/ftaskaev_infra#4](https://github.com/Otus-DevOps-2019-08/ftaskaev_infra/pull/5)
 
-### Основное задание
+<details>
+  <summary>Основное задание</summary>
+
 Собран образ `reddit-base-1569407504` на основе Ubuntu 16.04 LTS с предустановленными Ruby и MongoDB.
 ```console
 $ gcloud compute images list --no-standard-images
 NAME                    PROJECT                   FAMILY       DEPRECATED  STATUS
 reddit-base-1569407504  ************************  reddit-base              READY
 ```
+</details>
 
-### Дополнительное задание
+<details>
+  <summary>Дополнительное задание</summary>
+
 Создан образ `reddit-full-1569408139` на основе созданного ранее `reddit-base-1569407504` с предустановленными reddit server.  
 
 ```console
@@ -139,4 +144,9 @@ X-Frame-Options: SAMEORIGIN
 Set-Cookie: rack.session=BAh7CEkiD3Nlc3Npb25faWQGOgZFVEkiRTgzZjI4MTZmOGE4YmZhZTg5YTQy%0AMGU0MWRkNzBiNmQ2MmYwZDdmZDY2MjA0ZDBlOTU5YWM4YjEyYzA4NzI5ZDUG%0AOwBGSSIJY3NyZgY7AEZJIjE1MVAwNWdBRGc2UEUzVi8vcGpQUU0yVUFzQjlU%0AOTZoYWplUk5GVHpPczJJPQY7AEZJIg10cmFja2luZwY7AEZ7B0kiFEhUVFBf%0AVVNFUl9BR0VOVAY7AFRJIi01NmMxYTdkOWI2YjdjZjUyMTdkNTk1YjM4MjVm%0AZDc4MjI5MmIyNGNjBjsARkkiGUhUVFBfQUNDRVBUX0xBTkdVQUdFBjsAVEki%0ALWRhMzlhM2VlNWU2YjRiMGQzMjU1YmZlZjk1NjAxODkwYWZkODA3MDkGOwBG%0A--24740450230e9707b810bbaadb995e84a828a484; path=/; HttpOnly
 Content-Length: 1861
 ```
+</details>
+
+## Lesson 8: homework 6
+Terraform: ня-ня-ня.  
+PR: [Otus-DevOps-2019-08/ftaskaev_infra#4](https://github.com/Otus-DevOps-2019-08/ftaskaev_infra/pull/6)
 
