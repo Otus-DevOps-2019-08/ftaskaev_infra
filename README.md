@@ -185,7 +185,7 @@ resource "google_compute_instance" "app" {
 ```
 
 ## Дополнительное задание № 1
-- Добавление SSH-ключей к проету
+- Добавление SSH-ключей к проету.  
 Добавим input переменную для хранения логинов и публичных ключей в `variables.tf`:
 ```
 variable "user_ssh_keys" {
@@ -231,5 +231,22 @@ resource "google_compute_project_metadata_item" "ssh-keys" {
 Plan: 1 to add, 0 to change, 0 to destroy.
 ```
 
+- Создадим еще одного пользователя через web-интерфейс и повторно запустим `terraform apply`.
 - При выполнении `terraform apply` пользовательские SSH-ключи, добавленные через web-интерфейс, удаляются.
+
+```console
+  # google_compute_project_metadata_item.ssh-keys will be updated in-place
+  ~ resource "google_compute_project_metadata_item" "ssh-keys" {
+        id      = "ssh-keys"
+        key     = "ssh-keys"
+        project = "otus-devops-infra-253221"
+      ~ value   = <<~EOT
+            appuser:ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDIHBOqX9G6pxyYhq8mUdNQrpat8WO4Q4ekSY1suknDJyzyDm+rbAeUew0DopinkojAiiCY6fAVfiKhNpNqAMXh+qWshfDYF85B5bJheObI7Oxd79thm3i0JiHU4NLZsVqRSspufdfzCrzheWE84IXn76X1vdR6rUZQvdAlyPnDB9XM1vSnKQOWLB3+wmjqeBwCNivtMWXXx2hh9flfw9zI5gWSyGTH2EVGpFOToswBde0QpW8CLde+mjV92GNQZIZjmh5B4Xolf1hXiVEFXchHvCHDxnnFBCO36xTKhzEZeXyvY5bchIJ+mf94ZJs7qCPlYjINKL9tiNZEj2MagWL3 appuser
+            appuser1:ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDIHBOqX9G6pxyYhq8mUdNQrpat8WO4Q4ekSY1suknDJyzyDm+rbAeUew0DopinkojAiiCY6fAVfiKhNpNqAMXh+qWshfDYF85B5bJheObI7Oxd79thm3i0JiHU4NLZsVqRSspufdfzCrzheWE84IXn76X1vdR6rUZQvdAlyPnDB9XM1vSnKQOWLB3+wmjqeBwCNivtMWXXx2hh9flfw9zI5gWSyGTH2EVGpFOToswBde0QpW8CLde+mjV92GNQZIZjmh5B4Xolf1hXiVEFXchHvCHDxnnFBCO36xTKhzEZeXyvY5bchIJ+mf94ZJs7qCPlYjINKL9tiNZEj2MagWL3 appuser
+          - appuser_web:ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDIHBOqX9G6pxyYhq8mUdNQrpat8WO4Q4ekSY1suknDJyzyDm+rbAeUew0DopinkojAiiCY6fAVfiKhNpNqAMXh+qWshfDYF85B5bJheObI7Oxd79thm3i0JiHU4NLZsVqRSspufdfzCrzheWE84IXn76X1vdR6rUZQvdAlyPnDB9XM1vSnKQOWLB3+wmjqeBwCNivtMWXXx2hh9flfw9zI5gWSyGTH2EVGpFOToswBde0QpW8CLde+mjV92GNQZIZjmh5B4Xolf1hXiVEFXchHvCHDxnnFBCO36xTKhzEZeXyvY5bchIJ+mf94ZJs7qCPlYjINKL9tiNZEj2MagWL3 appuser_web
+        EOT
+    }
+
+Plan: 0 to add, 1 to change, 0 to destroy.
+```
 
