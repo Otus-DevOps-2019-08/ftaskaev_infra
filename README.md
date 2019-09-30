@@ -147,6 +147,89 @@ Content-Length: 1861
 </details>
 
 ## Lesson 8: homework 6
-Terraform: ня-ня-ня.  
+Terraform: автоматизация провижининга инфраструктуры.  
 PR: [Otus-DevOps-2019-08/ftaskaev_infra#4](https://github.com/Otus-DevOps-2019-08/ftaskaev_infra/pull/6)
+
+## Основное задание
+Добавим input переменные в `variables.tf`:
+```
+variable zone {
+  description = "Zone"
+  # Значение по умолчанию
+  default = "europe-west1-b"
+}
+variable private_key_path {
+  # Описание переменной
+  description = "Path to the private key used for ssh access"
+}
+```
+
+Используем переменные в `resource "google_compute_instance" "app"`:
+```diff
+resource "google_compute_instance" "app" {
+  name         = "reddit-app"
+  machine_type = "g1-small"
+- zone         = "europe-west1-b"
++ zone         = var.zone
+
+  connection {
+    type  = "ssh"
+    host  = self.network_interface[0].access_config[0].nat_ip
+    user  = "appuser"
+    agent = false
+    # путь до приватного ключа
+-   private_key = file("~/.ssh/appuser")
++   private_key = file(var.private_key_path)
+   }
+}
+```
+
+## Дополнительное задание № 1
+- Добавление SSH-ключей к проету
+Добавим input переменную для хранения логинов и публичных ключей в `variables.tf`:
+```
+variable "user_ssh_keys" {
+  type = list(object({
+    user = string
+    key = string
+  }))
+}
+```
+
+Добавим пользователей с одинаковыми ключами в `terraform.tfstate`:
+```
+user_ssh_keys = [
+  {
+    user = "appuser"
+    key = "~/.ssh/appuser.pub"
+  },
+  {
+    user = "appuser1"
+    key = "~/.ssh/appuser.pub"
+  }
+]
+```
+
+Добавим ресурс `google_compute_project_metadata_item` в `main.tf`, который будет добавлять пары `логин:ключ` в matadata проекта:
+```
+resource "google_compute_project_metadata_item" "ssh-keys" {
+  key = "ssh-keys"
+  value = join("\n", [for item in var.user_ssh_keys : "${item.user}:${file(item.key)}"])
+}
+```
+
+Результат выполнения `terraform apply`:
+```console
+  # google_compute_project_metadata_item.ssh-keys will be created
+  + resource "google_compute_project_metadata_item" "ssh-keys" {
+      + id      = (known after apply)
+      + key     = "ssh-keys"
+      + project = (known after apply)
+      + value   = "appuser:ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDIHBOqX9G6pxyYhq8mUdNQrpat8WO4Q4ekSY1suknDJyzyDm+rbAeUew0DopinkojAiiCY6fAVfiKhNpNqAMXh+qWshfDYF85B5bJheObI7Oxd79thm3i0JiHU4NLZsVqRSspufdfzCrzheWE84IXn76X1vdR6rUZQvdAlyPnDB9XM1vSnKQOWLB3+wmjqeBwCNivtMWXXx2hh9flfw9zI5gWSyGTH2EVGpFOToswBde0QpW8CLde+mjV92GNQZIZjmh5B4Xolf1hXiVEFXchHvCHDxnnFBCO36xTKhzEZeXyvY5bchIJ+mf94ZJs7qCPlYjINKL9tiNZEj2MagWL3 appuser\n\nappuser1:ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDIHBOqX9G6pxyYhq8mUdNQrpat8WO4Q4ekSY1suknDJyzyDm+rbAeUew0DopinkojAiiCY6fAVfiKhNpNqAMXh+qWshfDYF85B5bJheObI7Oxd79thm3i0JiHU4NLZsVqRSspufdfzCrzheWE84IXn76X1vdR6rUZQvdAlyPnDB9XM1vSnKQOWLB3+wmjqeBwCNivtMWXXx2hh9flfw9zI5gWSyGTH2EVGpFOToswBde0QpW8CLde+mjV92GNQZIZjmh5B4Xolf1hXiVEFXchHvCHDxnnFBCO36xTKhzEZeXyvY5bchIJ+mf94ZJs7qCPlYjINKL9tiNZEj2MagWL3 appuser\n"
+    }
+
+Plan: 1 to add, 0 to change, 0 to destroy.
+```
+
+- При выполнении `terraform apply` пользовательские SSH-ключи, добавленные через web-интерфейс, удаляются.
 
