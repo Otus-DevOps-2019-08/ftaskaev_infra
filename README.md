@@ -101,7 +101,7 @@ $ gcloud compute firewall-rules create default-puma-server \
 
 ## Lesson 7: homework 5
 Packer: подготовка образовов для ускорения развёртывания VM.  
-PR: [Otus-DevOps-2019-08/ftaskaev_infra#4](https://github.com/Otus-DevOps-2019-08/ftaskaev_infra/pull/5)
+PR: [Otus-DevOps-2019-08/ftaskaev_infra#5](https://github.com/Otus-DevOps-2019-08/ftaskaev_infra/pull/5)
 
 <details>
   <summary>Основное задание</summary>
@@ -148,7 +148,7 @@ Content-Length: 1861
 
 ## Lesson 8: homework 6
 Terraform: автоматизация провижининга инфраструктуры.  
-PR: [Otus-DevOps-2019-08/ftaskaev_infra#4](https://github.com/Otus-DevOps-2019-08/ftaskaev_infra/pull/6)
+PR: [Otus-DevOps-2019-08/ftaskaev_infra#6](https://github.com/Otus-DevOps-2019-08/ftaskaev_infra/pull/6)
 
 ## Основное задание
 Добавим input переменные в `variables.tf`:
@@ -185,7 +185,8 @@ resource "google_compute_instance" "app" {
 ```
 
 ## Дополнительное задание № 1
-- Добавление SSH-ключей к проету.  
+- Добавление SSH-ключей к проету.
+
 Добавим input переменную для хранения логинов и публичных ключей в `variables.tf`:
 ```
 variable "user_ssh_keys" {
