@@ -240,7 +240,7 @@ Plan: 1 to add, 0 to change, 0 to destroy.
   ~ resource "google_compute_project_metadata_item" "ssh-keys" {
         id      = "ssh-keys"
         key     = "ssh-keys"
-        project = "otus-devops-infra-253221"
+        project = "************************"
       ~ value   = <<~EOT
             appuser:ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDIHBOqX9G6pxyYhq8mUdNQrpat8WO4Q4ekSY1suknDJyzyDm+rbAeUew0DopinkojAiiCY6fAVfiKhNpNqAMXh+qWshfDYF85B5bJheObI7Oxd79thm3i0JiHU4NLZsVqRSspufdfzCrzheWE84IXn76X1vdR6rUZQvdAlyPnDB9XM1vSnKQOWLB3+wmjqeBwCNivtMWXXx2hh9flfw9zI5gWSyGTH2EVGpFOToswBde0QpW8CLde+mjV92GNQZIZjmh5B4Xolf1hXiVEFXchHvCHDxnnFBCO36xTKhzEZeXyvY5bchIJ+mf94ZJs7qCPlYjINKL9tiNZEj2MagWL3 appuser
             appuser1:ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDIHBOqX9G6pxyYhq8mUdNQrpat8WO4Q4ekSY1suknDJyzyDm+rbAeUew0DopinkojAiiCY6fAVfiKhNpNqAMXh+qWshfDYF85B5bJheObI7Oxd79thm3i0JiHU4NLZsVqRSspufdfzCrzheWE84IXn76X1vdR6rUZQvdAlyPnDB9XM1vSnKQOWLB3+wmjqeBwCNivtMWXXx2hh9flfw9zI5gWSyGTH2EVGpFOToswBde0QpW8CLde+mjV92GNQZIZjmh5B4Xolf1hXiVEFXchHvCHDxnnFBCO36xTKhzEZeXyvY5bchIJ+mf94ZJs7qCPlYjINKL9tiNZEj2MagWL3 appuser
@@ -292,8 +292,8 @@ reddit-app-1  europe-west1-b  g1-small                   10.132.15.192  34.77.12
 ```console
 $ gcloud compute target-pools describe reddit-app-lb-target-pool --format json | jq '.instances'
 [
-  "https://www.googleapis.com/compute/v1/projects/otus-devops-infra-253221/zones/europe-west1-b/instances/reddit-app-0",
-  "https://www.googleapis.com/compute/v1/projects/otus-devops-infra-253221/zones/europe-west1-b/instances/reddit-app-1"
+  "https://www.googleapis.com/compute/v1/projects/************************/zones/europe-west1-b/instances/reddit-app-0",
+  "https://www.googleapis.com/compute/v1/projects/************************/zones/europe-west1-b/instances/reddit-app-1"
 ]
 ```
 
