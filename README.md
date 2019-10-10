@@ -267,6 +267,7 @@ Plan: 0 to add, 1 to change, 0 to destroy.
 В `outputs.tf` добавим вывод публичных IP создаваемых VM и балансировщика: 
 
 ```console
+$ terraform output
 app_external_ip = [
   "35.240.124.75",
   "34.77.129.176",
