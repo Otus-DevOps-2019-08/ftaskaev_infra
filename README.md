@@ -251,3 +251,47 @@ Plan: 1 to add, 0 to change, 0 to destroy.
 Plan: 0 to add, 1 to change, 0 to destroy.
 ```
 
+## Дополнительное задание № 2
+
+Добавим переменную `node_count` для указания количества создаваемых VM:
+
+```diff
+ resource "google_compute_instance" "app" {
+-  name         = "reddit-app"
++  count        = var.node_count
++  name         = "reddit-app-${count.index}"
+   machine_type = "g1-small"
+   zone         = var.zone
+```
+
+В `outputs.tf` добавим вывод публичных IP создаваемых VM и балансировщика: 
+
+```console
+app_external_ip = [
+  "35.240.124.75",
+  "34.77.129.176",
+]
+lb_external_ip = 34.77.144.175
+```
+
+```console
+$ gcloud compute forwarding-rules list
+NAME                           REGION        IP_ADDRESS     IP_PROTOCOL  TARGET
+reddit-app-lb-forwarding-rule  europe-west1  34.77.144.175  TCP          europe-west1/targetPools/reddit-app-lb-target-pool
+```
+
+```console
+$ gcloud compute instances list
+NAME          ZONE            MACHINE_TYPE  PREEMPTIBLE  INTERNAL_IP    EXTERNAL_IP    STATUS
+reddit-app-0  europe-west1-b  g1-small                   10.132.0.63    35.240.124.75  RUNNING
+reddit-app-1  europe-west1-b  g1-small                   10.132.15.192  34.77.129.176  RUNNING
+```
+
+```console
+$ gcloud compute target-pools describe reddit-app-lb-target-pool --format json | jq '.instances'
+[
+  "https://www.googleapis.com/compute/v1/projects/otus-devops-infra-253221/zones/europe-west1-b/instances/reddit-app-0",
+  "https://www.googleapis.com/compute/v1/projects/otus-devops-infra-253221/zones/europe-west1-b/instances/reddit-app-1"
+]
+```
+

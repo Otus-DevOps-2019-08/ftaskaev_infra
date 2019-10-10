@@ -22,6 +22,10 @@ variable private_key_path {
 variable disk_image {
   description = "Disk image"
 }
+variable node_count {
+  description = "Instances count"
+  default = 1
+}
 variable "user_ssh_keys" {
   type = list(object({
     user = string
