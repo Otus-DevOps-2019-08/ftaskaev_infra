@@ -274,6 +274,8 @@ app_external_ip = [
 lb_external_ip = 34.77.144.175
 ```
 
+Проверим результат при помощи утилиты `gcloud`:
+
 ```console
 $ gcloud compute forwarding-rules list
 NAME                           REGION        IP_ADDRESS     IP_PROTOCOL  TARGET
