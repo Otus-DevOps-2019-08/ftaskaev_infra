@@ -101,17 +101,22 @@ $ gcloud compute firewall-rules create default-puma-server \
 
 ## Lesson 7: homework 5
 Packer: подготовка образовов для ускорения развёртывания VM.  
-PR: [Otus-DevOps-2019-08/ftaskaev_infra#4](https://github.com/Otus-DevOps-2019-08/ftaskaev_infra/pull/5)
+PR: [Otus-DevOps-2019-08/ftaskaev_infra#5](https://github.com/Otus-DevOps-2019-08/ftaskaev_infra/pull/5)
 
-### Основное задание
+<details>
+  <summary>Основное задание</summary>
+
 Собран образ `reddit-base-1569407504` на основе Ubuntu 16.04 LTS с предустановленными Ruby и MongoDB.
 ```console
 $ gcloud compute images list --no-standard-images
 NAME                    PROJECT                   FAMILY       DEPRECATED  STATUS
 reddit-base-1569407504  ************************  reddit-base              READY
 ```
+</details>
 
-### Дополнительное задание
+<details>
+  <summary>Дополнительное задание</summary>
+
 Создан образ `reddit-full-1569408139` на основе созданного ранее `reddit-base-1569407504` с предустановленными reddit server.  
 
 ```console
@@ -138,5 +143,158 @@ X-Content-Type-Options: nosniff
 X-Frame-Options: SAMEORIGIN
 Set-Cookie: rack.session=BAh7CEkiD3Nlc3Npb25faWQGOgZFVEkiRTgzZjI4MTZmOGE4YmZhZTg5YTQy%0AMGU0MWRkNzBiNmQ2MmYwZDdmZDY2MjA0ZDBlOTU5YWM4YjEyYzA4NzI5ZDUG%0AOwBGSSIJY3NyZgY7AEZJIjE1MVAwNWdBRGc2UEUzVi8vcGpQUU0yVUFzQjlU%0AOTZoYWplUk5GVHpPczJJPQY7AEZJIg10cmFja2luZwY7AEZ7B0kiFEhUVFBf%0AVVNFUl9BR0VOVAY7AFRJIi01NmMxYTdkOWI2YjdjZjUyMTdkNTk1YjM4MjVm%0AZDc4MjI5MmIyNGNjBjsARkkiGUhUVFBfQUNDRVBUX0xBTkdVQUdFBjsAVEki%0ALWRhMzlhM2VlNWU2YjRiMGQzMjU1YmZlZjk1NjAxODkwYWZkODA3MDkGOwBG%0A--24740450230e9707b810bbaadb995e84a828a484; path=/; HttpOnly
 Content-Length: 1861
+```
+</details>
+
+## Lesson 8: homework 6
+Terraform: автоматизация провижининга инфраструктуры.  
+PR: [Otus-DevOps-2019-08/ftaskaev_infra#6](https://github.com/Otus-DevOps-2019-08/ftaskaev_infra/pull/6)
+
+## Основное задание
+Добавим input переменные в `variables.tf`:
+```
+variable zone {
+  description = "Zone"
+  # Значение по умолчанию
+  default = "europe-west1-b"
+}
+variable private_key_path {
+  # Описание переменной
+  description = "Path to the private key used for ssh access"
+}
+```
+
+Используем переменные в `resource "google_compute_instance" "app"`:
+```diff
+resource "google_compute_instance" "app" {
+  name         = "reddit-app"
+  machine_type = "g1-small"
+- zone         = "europe-west1-b"
++ zone         = var.zone
+
+  connection {
+    type  = "ssh"
+    host  = self.network_interface[0].access_config[0].nat_ip
+    user  = "appuser"
+    agent = false
+    # путь до приватного ключа
+-   private_key = file("~/.ssh/appuser")
++   private_key = file(var.private_key_path)
+   }
+}
+```
+
+## Дополнительное задание № 1
+- Добавление SSH-ключей к проекту.
+
+Добавим input переменную для хранения логинов и публичных ключей в `variables.tf`:
+```
+variable "user_ssh_keys" {
+  type = list(object({
+    user = string
+    key = string
+  }))
+}
+```
+
+Добавим пользователей с одинаковыми ключами в `terraform.tfvars`:
+```
+user_ssh_keys = [
+  {
+    user = "appuser"
+    key = "~/.ssh/appuser.pub"
+  },
+  {
+    user = "appuser1"
+    key = "~/.ssh/appuser.pub"
+  }
+]
+```
+
+Добавим ресурс `google_compute_project_metadata_item` в `main.tf`, который будет добавлять пары `логин:ключ` в matadata проекта:
+```
+resource "google_compute_project_metadata_item" "ssh-keys" {
+  key = "ssh-keys"
+  value = join("\n", [for item in var.user_ssh_keys : "${item.user}:${file(item.key)}"])
+}
+```
+
+Результат выполнения `terraform apply`:
+```console
+  # google_compute_project_metadata_item.ssh-keys will be created
+  + resource "google_compute_project_metadata_item" "ssh-keys" {
+      + id      = (known after apply)
+      + key     = "ssh-keys"
+      + project = (known after apply)
+      + value   = "appuser:ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDIHBOqX9G6pxyYhq8mUdNQrpat8WO4Q4ekSY1suknDJyzyDm+rbAeUew0DopinkojAiiCY6fAVfiKhNpNqAMXh+qWshfDYF85B5bJheObI7Oxd79thm3i0JiHU4NLZsVqRSspufdfzCrzheWE84IXn76X1vdR6rUZQvdAlyPnDB9XM1vSnKQOWLB3+wmjqeBwCNivtMWXXx2hh9flfw9zI5gWSyGTH2EVGpFOToswBde0QpW8CLde+mjV92GNQZIZjmh5B4Xolf1hXiVEFXchHvCHDxnnFBCO36xTKhzEZeXyvY5bchIJ+mf94ZJs7qCPlYjINKL9tiNZEj2MagWL3 appuser\n\nappuser1:ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDIHBOqX9G6pxyYhq8mUdNQrpat8WO4Q4ekSY1suknDJyzyDm+rbAeUew0DopinkojAiiCY6fAVfiKhNpNqAMXh+qWshfDYF85B5bJheObI7Oxd79thm3i0JiHU4NLZsVqRSspufdfzCrzheWE84IXn76X1vdR6rUZQvdAlyPnDB9XM1vSnKQOWLB3+wmjqeBwCNivtMWXXx2hh9flfw9zI5gWSyGTH2EVGpFOToswBde0QpW8CLde+mjV92GNQZIZjmh5B4Xolf1hXiVEFXchHvCHDxnnFBCO36xTKhzEZeXyvY5bchIJ+mf94ZJs7qCPlYjINKL9tiNZEj2MagWL3 appuser\n"
+    }
+
+Plan: 1 to add, 0 to change, 0 to destroy.
+```
+
+- Создадим еще одного пользователя через web-интерфейс и повторно запустим `terraform apply`.
+- При выполнении `terraform apply` пользовательские SSH-ключи, добавленные через web-интерфейс, удаляются.
+
+```console
+  # google_compute_project_metadata_item.ssh-keys will be updated in-place
+  ~ resource "google_compute_project_metadata_item" "ssh-keys" {
+        id      = "ssh-keys"
+        key     = "ssh-keys"
+        project = "************************"
+      ~ value   = <<~EOT
+            appuser:ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDIHBOqX9G6pxyYhq8mUdNQrpat8WO4Q4ekSY1suknDJyzyDm+rbAeUew0DopinkojAiiCY6fAVfiKhNpNqAMXh+qWshfDYF85B5bJheObI7Oxd79thm3i0JiHU4NLZsVqRSspufdfzCrzheWE84IXn76X1vdR6rUZQvdAlyPnDB9XM1vSnKQOWLB3+wmjqeBwCNivtMWXXx2hh9flfw9zI5gWSyGTH2EVGpFOToswBde0QpW8CLde+mjV92GNQZIZjmh5B4Xolf1hXiVEFXchHvCHDxnnFBCO36xTKhzEZeXyvY5bchIJ+mf94ZJs7qCPlYjINKL9tiNZEj2MagWL3 appuser
+            appuser1:ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDIHBOqX9G6pxyYhq8mUdNQrpat8WO4Q4ekSY1suknDJyzyDm+rbAeUew0DopinkojAiiCY6fAVfiKhNpNqAMXh+qWshfDYF85B5bJheObI7Oxd79thm3i0JiHU4NLZsVqRSspufdfzCrzheWE84IXn76X1vdR6rUZQvdAlyPnDB9XM1vSnKQOWLB3+wmjqeBwCNivtMWXXx2hh9flfw9zI5gWSyGTH2EVGpFOToswBde0QpW8CLde+mjV92GNQZIZjmh5B4Xolf1hXiVEFXchHvCHDxnnFBCO36xTKhzEZeXyvY5bchIJ+mf94ZJs7qCPlYjINKL9tiNZEj2MagWL3 appuser
+          - appuser_web:ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDIHBOqX9G6pxyYhq8mUdNQrpat8WO4Q4ekSY1suknDJyzyDm+rbAeUew0DopinkojAiiCY6fAVfiKhNpNqAMXh+qWshfDYF85B5bJheObI7Oxd79thm3i0JiHU4NLZsVqRSspufdfzCrzheWE84IXn76X1vdR6rUZQvdAlyPnDB9XM1vSnKQOWLB3+wmjqeBwCNivtMWXXx2hh9flfw9zI5gWSyGTH2EVGpFOToswBde0QpW8CLde+mjV92GNQZIZjmh5B4Xolf1hXiVEFXchHvCHDxnnFBCO36xTKhzEZeXyvY5bchIJ+mf94ZJs7qCPlYjINKL9tiNZEj2MagWL3 appuser_web
+        EOT
+    }
+
+Plan: 0 to add, 1 to change, 0 to destroy.
+```
+
+## Дополнительное задание № 2
+
+Добавим переменную `node_count` для указания количества создаваемых VM:
+
+```diff
+ resource "google_compute_instance" "app" {
+-  name         = "reddit-app"
++  count        = var.node_count
++  name         = "reddit-app-${count.index}"
+   machine_type = "g1-small"
+   zone         = var.zone
+```
+
+В `outputs.tf` добавим вывод публичных IP создаваемых VM и балансировщика: 
+
+```console
+$ terraform output
+app_external_ip = [
+  "35.240.124.75",
+  "34.77.129.176",
+]
+lb_external_ip = 34.77.144.175
+```
+
+Проверим результат при помощи утилиты `gcloud`:
+
+```console
+$ gcloud compute forwarding-rules list
+NAME                           REGION        IP_ADDRESS     IP_PROTOCOL  TARGET
+reddit-app-lb-forwarding-rule  europe-west1  34.77.144.175  TCP          europe-west1/targetPools/reddit-app-lb-target-pool
+```
+
+```console
+$ gcloud compute instances list
+NAME          ZONE            MACHINE_TYPE  PREEMPTIBLE  INTERNAL_IP    EXTERNAL_IP    STATUS
+reddit-app-0  europe-west1-b  g1-small                   10.132.0.63    35.240.124.75  RUNNING
+reddit-app-1  europe-west1-b  g1-small                   10.132.15.192  34.77.129.176  RUNNING
+```
+
+```console
+$ gcloud compute target-pools describe reddit-app-lb-target-pool --format json | jq '.instances'
+[
+  "https://www.googleapis.com/compute/v1/projects/************************/zones/europe-west1-b/instances/reddit-app-0",
+  "https://www.googleapis.com/compute/v1/projects/************************/zones/europe-west1-b/instances/reddit-app-1"
+]
 ```
 

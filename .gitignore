@@ -1,2 +1,11 @@
 .DS_Store
+
+# Packer sensitive data
 packer/variables.json
+
+# Terrafor sensitive data
+*.tfstate
+*.tfstate.*.backup
+*.tfstate.backup
+*.tfvars
+.terraform/
