@@ -375,6 +375,7 @@ output "db_internal_ip" {
   value = google_compute_instance.db.network_interface.0.network_ip
 }
 ```
+
 В `modules/app/main.tf` добавим провиженер файла с IP db, который используем в в качестве `EnvironmentFile` для puma.service:
 
 provisioner "remote-exec" {
@@ -382,3 +383,15 @@ provisioner "remote-exec" {
     "sudo echo DATABASE_URL=${var.db_internal_ip} > /tmp/puma.env"
   ]
 }
+
+Для возможности отключать/включать провиженинг, создадим в `modules/app/main.tf` null_resource и перенесём провиженеры в него. Ресур будет исполняться в зависимости от значения переменной `app_provision`:
+
+```console
+resource "null_resource" "post-install" {
+  # This code should run if app_provision is set true
+  count = "${var.app_provision ? 1 : 0}"
+
+  [... provisioner code ...]
+
+}
+```

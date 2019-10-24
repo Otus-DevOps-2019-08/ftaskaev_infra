@@ -31,3 +31,9 @@ variable private_key_path {
   description = "Path to the private key used for ssh access"
   default = "~/.ssh/appuser"
 }
+
+variable app_provision {
+  description = "Define whether install reddit-app or not"
+  type = bool
+  default = true
+}
