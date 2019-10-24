@@ -1,11 +1,11 @@
 variable zone {
   description = "Zone"
-  default = "europe-west1-b"
+  default     = "europe-west1-b"
 }
 
 variable app_disk_image {
   description = "Disk image for reddit app"
-  default = "reddit-app-base"
+  default     = "reddit-app-base"
 }
 
 variable public_key_path {
@@ -18,11 +18,11 @@ variable private_key_path {
 
 variable app_provision {
   description = "Define whether install reddit-app or not"
-  type = bool
-  default = true
+  type        = bool
+  default     = true
 }
 
 variable db_internal_ip {
   description = "DB instance internal IP"
-  default = "127.0.0.1"
+  default     = "127.0.0.1"
 }

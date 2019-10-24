@@ -8,7 +8,7 @@ module "storage-bucket" {
   source  = "SweetOps/storage-bucket/google"
   version = "0.3.0"
 
-  name = "otus-devops-infra-ftaskaev"
+  name     = "otus-devops-infra-ftaskaev"
   location = var.region
 }
 
