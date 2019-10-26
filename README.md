@@ -150,7 +150,9 @@ Content-Length: 1861
 Terraform: автоматизация провижининга инфраструктуры.  
 PR: [Otus-DevOps-2019-08/ftaskaev_infra#6](https://github.com/Otus-DevOps-2019-08/ftaskaev_infra/pull/6)
 
-## Основное задание
+<details>
+  <summary>Основное задание</summary>
+
 Добавим input переменные в `variables.tf`:
 ```
 variable zone {
@@ -183,8 +185,11 @@ resource "google_compute_instance" "app" {
    }
 }
 ```
+</details>
 
-## Дополнительное задание № 1
+<details>
+  <summary>Дополнительное задание №1</summary>
+
 - Добавление SSH-ключей к проекту.
 
 Добавим input переменную для хранения логинов и публичных ключей в `variables.tf`:
@@ -250,8 +255,10 @@ Plan: 1 to add, 0 to change, 0 to destroy.
 
 Plan: 0 to add, 1 to change, 0 to destroy.
 ```
+</details>
 
-## Дополнительное задание № 2
+<details>
+  <summary>Дополнительное задание №2</summary>
 
 Добавим переменную `node_count` для указания количества создаваемых VM:
 
@@ -297,4 +304,96 @@ $ gcloud compute target-pools describe reddit-app-lb-target-pool --format json |
   "https://www.googleapis.com/compute/v1/projects/************************/zones/europe-west1-b/instances/reddit-app-1"
 ]
 ```
+</details>
 
+## Lesson 9: homework 7
+Terraform: работы с модулями.  
+PR: [Otus-DevOps-2019-08/ftaskaev_infra#7](https://github.com/Otus-DevOps-2019-08/ftaskaev_infra/pull/7)
+
+## Основное задание
+При помощи packer созданы новые образы для раздельного деплоя reddit-db и reddit-app:
+
+```console
+$ gcloud compute images list --no-standard-images
+NAME                        PROJECT                   FAMILY           DEPRECATED  STATUS
+reddit-app-base-1571378434  ************************  reddit-app-base              READY
+reddit-db-base-1571378176   ************************  reddit-db-base               READY
+```
+
+Созданы модули terraform `app`, `db` и `vpc`:
+
+```console
+$ tree ./modules/
+./modules/
+├── app
+│   ├── main.tf
+│   ├── outputs.tf
+│   └── variables.tf
+├── db
+│   ├── main.tf
+│   ├── outputs.tf
+│   └── variables.tf
+└── vpc
+    ├── main.tf
+    ├── outputs.tf
+    └── variables.tf
+```
+
+Созданы изолированные окружения `stage` и `prod`.
+
+## Дополнительное задание № 1
+Настроено хранение state-файлов terraform в Google Storage:
+
+```console
+$ gsutil ls -r gs://otus-devops-infra-ftaskaev/terraform/state/
+gs://otus-devops-infra-ftaskaev/terraform/state/:
+
+gs://otus-devops-infra-ftaskaev/terraform/state/prod/:
+gs://otus-devops-infra-ftaskaev/terraform/state/prod/default.tfstate
+
+gs://otus-devops-infra-ftaskaev/terraform/state/stage/:
+gs://otus-devops-infra-ftaskaev/terraform/state/stage/default.tfstate
+```
+
+## Дополнительное задание № 2
+Для провижининга reddit-app необходимо перенастроить Mongo на внешний IP.  
+Для этого добавим provisioner в `modules/db/main.tf`:
+
+```console
+provisioner "remote-exec" {
+  inline = [
+    "sudo sed -i -e 's/bindIp: 127.0.0.1/bindIp: 0.0.0.0/g' /etc/mongod.conf",
+    "sudo systemctl restart mongod"
+  ]
+}
+```
+
+В `modules/db/outputs.tf` добавим вывод внутреннего IP db для передачи в провиженер app:
+
+```console
+output "db_internal_ip" {
+  value = google_compute_instance.db.network_interface.0.network_ip
+}
+```
+
+В `modules/app/main.tf` добавим провиженер файла с IP db, который используем в в качестве `EnvironmentFile` для puma.service:
+
+```console
+provisioner "remote-exec" {
+  inline = [
+    "sudo echo DATABASE_URL=${var.db_internal_ip} > /tmp/puma.env"
+  ]
+}
+```
+
+Для возможности отключать/включать провиженинг, создадим в `modules/app/main.tf` null_resource и перенесём провиженеры в него. Ресур будет исполняться в зависимости от значения переменной `app_provision`:
+
+```console
+resource "null_resource" "post-install" {
+  # This code should run if app_provision is set true
+  count = "${var.app_provision ? 1 : 0}"
+
+  [... provisioner code ...]
+
+}
+```
