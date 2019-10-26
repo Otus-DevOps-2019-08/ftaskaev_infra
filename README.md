@@ -310,7 +310,9 @@ $ gcloud compute target-pools describe reddit-app-lb-target-pool --format json |
 Terraform: работы с модулями.  
 PR: [Otus-DevOps-2019-08/ftaskaev_infra#7](https://github.com/Otus-DevOps-2019-08/ftaskaev_infra/pull/7)
 
-## Основное задание
+<details>
+  <summary>Основное задание</summary>
+
 При помощи packer созданы новые образы для раздельного деплоя reddit-db и reddit-app:
 
 ```console
@@ -340,8 +342,11 @@ $ tree ./modules/
 ```
 
 Созданы изолированные окружения `stage` и `prod`.
+</details>
 
-## Дополнительное задание № 1
+<details>
+  <summary>Дополнительное задание № 1</summary>
+
 Настроено хранение state-файлов terraform в Google Storage:
 
 ```console
@@ -354,8 +359,11 @@ gs://otus-devops-infra-ftaskaev/terraform/state/prod/default.tfstate
 gs://otus-devops-infra-ftaskaev/terraform/state/stage/:
 gs://otus-devops-infra-ftaskaev/terraform/state/stage/default.tfstate
 ```
+</details>
 
-## Дополнительное задание № 2
+<details>
+  <summary>Дополнительное задание № 2</summary>
+
 Для провижининга reddit-app необходимо перенастроить Mongo на внешний IP.  
 Для этого добавим provisioner в `modules/db/main.tf`:
 
@@ -395,5 +403,83 @@ resource "null_resource" "post-install" {
 
   [... provisioner code ...]
 
+}
+```
+</details>
+
+## Lesson 10: homework 8
+Ansible: написание ansible-плейбуков на основе имеющихся bash-скриптов.  
+PR: [Otus-DevOps-2019-08/ftaskaev_infra#8](https://github.com/Otus-DevOps-2019-08/ftaskaev_infra/pull/8)
+
+После удаления дирректории плейбук выполнился с результатом `changed=1`:
+
+```console
+$ ansible-playbook clone.yml
+
+PLAY [Clone] ****************************************************************************************************************************************************************************************
+
+TASK [Gathering Facts] ******************************************************************************************************************************************************************************
+ok: [appserver]
+
+TASK [Clone repo] ***********************************************************************************************************************************************************************************
+changed: [appserver]
+
+PLAY RECAP ******************************************************************************************************************************************************************************************
+appserver                  : ok=2    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+```
+
+# Дополнительное задание
+
+Написал скрипт `ansible/inventator.py`, генерирующий динапический inventory при помощи API GCE.  
+Для корректной работы необходимо указать PROJECT_ID, ZONE_ID и получить API-токен:
+
+```console
+gcloud auth application-default print-access-token
+```
+
+Работы ansible с использованием динапической inventory:
+
+```console
+$ ansible-inventory -i inventator.py --list
+{
+    "_meta": {
+        "hostvars": {
+            "reddit-app": {
+                "ansible_host": "104.155.83.254"
+            },
+            "reddit-db": {
+                "ansible_host": "35.205.107.59"
+            }
+        }
+    },
+    "all": {
+        "children": [
+            "ungrouped"
+        ]
+    },
+    "ungrouped": {
+        "hosts": [
+            "reddit-app",
+            "reddit-db"
+        ]
+    }
+}
+```
+
+```console
+$ ansible -i inventator.py -m ping all
+reddit-app | SUCCESS => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python"
+    },
+    "changed": false,
+    "ping": "pong"
+}
+reddit-db | SUCCESS => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python"
+    },
+    "changed": false,
+    "ping": "pong"
 }
 ```
