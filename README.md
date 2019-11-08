@@ -554,7 +554,8 @@ dbserver                   : ok=3    changed=2    unreachable=0    failed=0    s
 
 # Дополнительное задание
 
-Для dynamic inventory воспользуемся модулем [gcp_compute](https://docs.ansible.com/ansible/latest/plugins/inventory/gcp_compute.html). Статья на тему: [How to use Ansible GCP compute inventory plugin](http://matthieure.me/2018/12/31/ansible_inventory_plugin.html).  
+Для dynamic inventory воспользуемся модулем [gcp_compute](https://docs.ansible.com/ansible/latest/plugins/inventory/gcp_compute.html).  
+Статья на тему: [How to use Ansible GCP compute inventory plugin](http://matthieure.me/2018/12/31/ansible_inventory_plugin.html).  
 Устанавливаем необходимые модули:
 
 ```console
@@ -602,7 +603,7 @@ inventory = ./otus-devops-infra.gcp.yml
 enable_plugins = gcp_compute
 ```
 
-После этого все статические inventory удоляем.
+После этого все статические inventory удаляем.
 
 Для корретной настройки приложения reddit в `templates/db_config.j2` берём приватный IP БД из inventory:
 
