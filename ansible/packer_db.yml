@@ -1,0 +1,26 @@
+---
+- name: Install MongoDB 3.2
+  hosts: all
+  become: true
+
+  tasks:
+    - name: Add APT key for MongoDB repository
+      apt_key:
+        id: D68FA50FEA312927
+        keyserver: keyserver.ubuntu.com
+
+    - name: Add MongoDB repository
+      apt_repository:
+        repo: deb [ arch=amd64,arm64 ] http://repo.mongodb.org/apt/ubuntu xenial/mongodb-org/3.2 multiverse
+        state: present
+
+    - name: Install MongoDB package
+      apt:
+        name: mongodb-org
+        state: present
+
+    - name: Enable and start MongoDB service
+      systemd:
+        name: mongod
+        state: started
+        enabled: yes

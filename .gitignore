@@ -9,3 +9,9 @@ packer/variables.json
 *.tfstate.backup
 *.tfvars
 .terraform/
+
+# Ansible sensitive data
+*.gcp.yml
+
+# Ansible temporary files
+*.retry

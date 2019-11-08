@@ -411,6 +411,9 @@ resource "null_resource" "post-install" {
 Ansible: написание ansible-плейбуков на основе имеющихся bash-скриптов.  
 PR: [Otus-DevOps-2019-08/ftaskaev_infra#8](https://github.com/Otus-DevOps-2019-08/ftaskaev_infra/pull/8)
 
+<details>
+  <summary>Основное задание</summary>
+
 После удаления дирректории плейбук выполнился с результатом `changed=1`:
 
 ```console
@@ -427,8 +430,10 @@ changed: [appserver]
 PLAY RECAP ******************************************************************************************************************************************************************************************
 appserver                  : ok=2    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
 ```
+</details>
 
-# Дополнительное задание
+<details>
+  <summary>Дополнительное задание</summary>
 
 Написал скрипт `ansible/inventator.py`, генерирующий динапический inventory при помощи API GCE.  
 Для корректной работы необходимо указать PROJECT_ID, ZONE_ID и получить API-токен:
@@ -482,4 +487,125 @@ reddit-db | SUCCESS => {
     "changed": false,
     "ping": "pong"
 }
+```
+</details>
+
+## Lesson 11: homework 9
+Ansible: управление настройками хостов и деплой приложения при помощи Ansible.  
+PR: [Otus-DevOps-2019-08/ftaskaev_infra#9](https://github.com/Otus-DevOps-2019-08/ftaskaev_infra/pull/9)
+
+# Основное задание
+
+ * В ходе выполнения ДЗ были написаны playbook'и для развёртывания БД и приложения reddit.
+ * Provisioners для packer'а были заменены на ansible, с их помощью пересобраны образы VM.
+ * Добавлен playbook `site.yml` для развёртывания и обновления связки БД - приложение reddit.
+
+Деплой посредством site.yml:
+
+```console
+$ ansible-playbook site.yml
+
+PLAY [Configure MongoDB] ****************************************************************************************************************************
+
+TASK [Gathering Facts] ******************************************************************************************************************************
+ok: [dbserver]
+
+TASK [Change mongo config file] *********************************************************************************************************************
+changed: [dbserver]
+
+RUNNING HANDLER [restart mongod] ********************************************************************************************************************
+changed: [dbserver]
+
+PLAY [Configure App] ********************************************************************************************************************************
+
+TASK [Gathering Facts] ******************************************************************************************************************************
+ok: [appserver]
+
+TASK [Add unit file for puma] ***********************************************************************************************************************
+changed: [appserver]
+
+TASK [Add config for DB connection] *****************************************************************************************************************
+changed: [appserver]
+
+TASK [Enable puma service] **************************************************************************************************************************
+changed: [appserver]
+
+RUNNING HANDLER [reload puma] ***********************************************************************************************************************
+changed: [appserver]
+
+PLAY [Deploy App] ***********************************************************************************************************************************
+
+TASK [Gathering Facts] ******************************************************************************************************************************
+ok: [appserver]
+
+TASK [Fetch the latest version of application code] *************************************************************************************************
+changed: [appserver]
+
+TASK [bundle install] *******************************************************************************************************************************
+changed: [appserver]
+
+RUNNING HANDLER [restart puma] **********************************************************************************************************************
+changed: [appserver]
+
+PLAY RECAP ******************************************************************************************************************************************
+appserver                  : ok=9    changed=7    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+dbserver                   : ok=3    changed=2    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+```
+
+# Дополнительное задание
+
+Для dynamic inventory воспользуемся модулем [gcp_compute](https://docs.ansible.com/ansible/latest/plugins/inventory/gcp_compute.html). Статья на тему: [How to use Ansible GCP compute inventory plugin](http://matthieure.me/2018/12/31/ansible_inventory_plugin.html).  
+Устанавливаем необходимые модули:
+
+```console
+pip install requests google-auth
+```
+
+Создаём сервисный аккаунт, получаем ключ для него и выдаем роль viewer для нашего проекта:
+
+```console
+gcloud iam service-accounts create sa-ansible-dynamic-inventory \
+  --display-name='Service account for Ansible dynamic inventory'
+```
+```console
+gcloud iam service-accounts keys create sa-ansible-dynamic-inventory.json \
+  --iam-account=sa-ansible-dynamic-inventory@[ YOUR-PROJECT-ID ].iam.gserviceaccount.com
+```
+```console
+gcloud projects add-iam-policy-binding [ YOUR-PROJECT-ID ] \
+  --member serviceAccount:sa-ansible-dynamic-inventory@[ YOUR-PROJECT-ID ].iam.gserviceaccount.com \
+  --role roles/viewer
+```
+
+Создаём файл `ansible/otus-devops-infra.gcp.yml`, который будет работать в качестве dynamic inventory.  
+В нём необходимо указать ID проекта и путь до ключа сервисного аккаунта:
+
+```console
+plugin: gcp_compute
+projects:
+  - [ YOUR-PROJECT-ID ]
+auth_kind: serviceaccount
+service_account_file: /Users/me/sa-ansible-dynamic-inventory.json
+hostnames:
+  - name
+compose:
+  ansible_host: networkInterfaces[0].accessConfigs[0].natIP
+```
+
+Добавляем в `ansible.cfg`:
+
+```console
+[defaults]
+inventory = ./otus-devops-infra.gcp.yml
+
+[inventory]
+enable_plugins = gcp_compute
+```
+
+После этого все статические inventory удоляем.
+
+Для корретной настройки приложения reddit в `templates/db_config.j2` берём приватный IP БД из inventory:
+
+```django
+DATABASE_URL={{ hostvars['reddit-db'].networkInterfaces[0].networkIP }}
 ```
