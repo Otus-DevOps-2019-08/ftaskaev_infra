@@ -494,7 +494,8 @@ reddit-db | SUCCESS => {
 Ansible: управление настройками хостов и деплой приложения при помощи Ansible.  
 PR: [Otus-DevOps-2019-08/ftaskaev_infra#9](https://github.com/Otus-DevOps-2019-08/ftaskaev_infra/pull/9)
 
-# Основное задание
+<details>
+  <summary>Основное задание</summary>
 
  * В ходе выполнения ДЗ были написаны playbook'и для развёртывания БД и приложения reddit.
  * Provisioners для packer'а были заменены на ansible, с их помощью пересобраны образы VM.
@@ -551,8 +552,10 @@ PLAY RECAP *********************************************************************
 appserver                  : ok=9    changed=7    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
 dbserver                   : ok=3    changed=2    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
 ```
+</details>
 
-# Дополнительное задание
+<details>
+  <summary>Дополнительное задание</summary>
 
 Для dynamic inventory воспользуемся модулем [gcp_compute](https://docs.ansible.com/ansible/latest/plugins/inventory/gcp_compute.html).  
 Статья на тему: [How to use Ansible GCP compute inventory plugin](http://matthieure.me/2018/12/31/ansible_inventory_plugin.html).  
@@ -609,4 +612,38 @@ enable_plugins = gcp_compute
 
 ```django
 DATABASE_URL={{ hostvars['reddit-db'].networkInterfaces[0].networkIP }}
+```
+</details>
+
+## Lesson 12: homework 10
+Ansible: написание ролей для управления конфигурацией сервисов и настройками хостов.  
+PR: [Otus-DevOps-2019-08/ftaskaev_infra#10](https://github.com/Otus-DevOps-2019-08/ftaskaev_infra/pull/10)
+
+Для начала добавим в наш dynamic inventory разбивку хостов по группам:
+
+```console
+plugin: gcp_compute
+projects:
+  - [ YOUR-PROJECT-ID ]
+auth_kind: serviceaccount
+service_account_file: /Users/me/sa-ansible-dynamic-inventory.json
+hostnames:
+  - name
+compose:
+  ansible_host: networkInterfaces[0].accessConfigs[0].natIP
+
+groups:
+  app: "'-app' in name"
+  db: "'-db' in name"
+```
+Проверим:
+
+```console
+$ ansible-inventory --graph
+@all:
+  |--@app:
+  |  |--reddit-app
+  |--@db:
+  |  |--reddit-db
+  |--@ungrouped:
 ```
