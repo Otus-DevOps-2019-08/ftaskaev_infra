@@ -647,3 +647,33 @@ $ ansible-inventory --graph
   |  |--reddit-db
   |--@ungrouped:
 ```
+
+# Самостоятельное задание
+
+В GCE по умолчанию есть правило для открытия HTTP/HTTPS. Чтобы оно применялось к инстансу reddit-app, достаточно добавить тег `web-host` в модуль `terraform/modules/app/main.tf`:
+
+```diff
+resource "google_compute_instance" "app" {
+   name         = "reddit-app"
+   machine_type = "g1-small"
+   zone         = var.zone
+-  tags         = ["reddit-app"]
++  tags         = ["reddit-app", "web-host"]
+   boot_disk {
+     initialize_params { image = var.app_disk_image }
+   }
+```
+
+Добавляем роль `jdauphant.nginx` в `playbooks/app.yml`:
+
+```console
+---
+- name: Configure App
+  hosts: app
+  become: true
+
+  roles:
+    - app
+    - jdauphant.nginx
+```
+

@@ -15,3 +15,6 @@ packer/variables.json
 
 # Ansible temporary files
 *.retry
+
+# Ansible community roles
+jdauphant.nginx
