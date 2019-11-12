@@ -1,9 +1,18 @@
 dist: trusty
 sudo: required
 language: bash
-before_install:
-- curl https://raw.githubusercontent.com/express42/otus-homeworks/2019-08/run.sh |
-  bash
+
+jobs:
+  include:
+    - name: OTUS Default CI/CD
+      before_install:
+        - curl https://raw.githubusercontent.com/express42/otus-homeworks/2019-08/run.sh | bash
+      if: branch != travis-test
+      
+    - name: travis-test
+      script: echo "Test job for $TRAVIS_BRANCH"
+      if: branch = travis-test
+
 notifications:
   slack:
     rooms:
