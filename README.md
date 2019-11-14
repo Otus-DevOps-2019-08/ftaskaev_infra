@@ -617,36 +617,7 @@ DATABASE_URL={{ hostvars['reddit-db'].networkInterfaces[0].networkIP }}
 
 ## Lesson 12: homework 10
 Ansible: написание ролей для управления конфигурацией сервисов и настройками хостов.  
-PR: [Otus-DevOps-2019-08/ftaskaev_infra#10](https://github.com/Otus-DevOps-2019-08/ftaskaev_infra/pull/10)
-
-Для начала добавим в наш dynamic inventory разбивку хостов по группам:
-
-```console
-plugin: gcp_compute
-projects:
-  - [ YOUR-PROJECT-ID ]
-auth_kind: serviceaccount
-service_account_file: /Users/me/sa-ansible-dynamic-inventory.json
-hostnames:
-  - name
-compose:
-  ansible_host: networkInterfaces[0].accessConfigs[0].natIP
-
-groups:
-  app: "'-app' in name"
-  db: "'-db' in name"
-```
-Проверим:
-
-```console
-$ ansible-inventory --graph
-@all:
-  |--@app:
-  |  |--reddit-app
-  |--@db:
-  |  |--reddit-db
-  |--@ungrouped:
-```
+PR: [Otus-DevOps-2019-08/ftaskaev_infra#11](https://github.com/Otus-DevOps-2019-08/ftaskaev_infra/pull/11)
 
 # Самостоятельное задание
 
@@ -675,5 +646,84 @@ resource "google_compute_instance" "app" {
   roles:
     - app
     - jdauphant.nginx
+```
+
+# Дополнительное задание №1
+
+Для dynamic inventory воспользуемся модулем [gcp_compute](https://docs.ansible.com/ansible/latest/plugins/inventory/gcp_compute.html).  
+В дополнение к предыдущему заданию добавим разбивку хостов по группам:
+
+```console
+plugin: gcp_compute
+projects:
+  - [ YOUR-PROJECT-ID ]
+auth_kind: serviceaccount
+service_account_file: /Users/me/sa-ansible-dynamic-inventory.json
+hostnames:
+  - name
+compose:
+  ansible_host: networkInterfaces[0].accessConfigs[0].natIP
+
+groups:
+  app: "'-app' in name"
+  db: "'-db' in name"
+```
+Проверим:
+
+```console
+$ ansible-inventory --graph
+@all:
+  |--@app:
+  |  |--reddit-app
+  |--@db:
+  |  |--reddit-db
+  |--@ungrouped:
+```
+
+Скопируем файл в `ansible/environments/prod/otus-devops-infra.gcp.yml` и `ansible/environments/prod/otus-devops-infra.gcp.yml`. 
+
+# Дополнительное задание №2
+
+Для отладки тестов TravisCI утилитой trytravis необходимо было сделать fork репозитория и переименовать его в `trytravis_ftaskaev_infra`.  
+В `.travis.yml` добавим задание, которое будет срабатывать по условию `if: branch = master`:
+
+```yaml
+jobs:
+  include:
+    - name: This should run only for master branch
+      install:
+        # Prepare bin directory
+        - mkdir -p ${HOME}/bin ; export PATH=${PATH}:${HOME}/bin
+        # Install terraform
+        - curl --silent --output terraform.zip https://releases.hashicorp.com/terraform/0.12.8/terraform_0.12.8_linux_amd64.zip
+        - unzip terraform.zip -d ${HOME}/bin
+        - chmod +x ${HOME}/bin/terraform
+        # Install tflint
+        - curl --silent -L --output tflint.zip https://github.com/terraform-linters/tflint/releases/download/v0.12.1/tflint_linux_amd64.zip
+        - unzip tflint.zip -d ${HOME}/bin
+        - chmod +x ${HOME}/bin/tflint
+        # Install ansible and ansible-lint
+        - pip install --user ansible
+        - pip install --user ansible-lint
+      before_script:
+        - packer --version
+        - terraform --version
+        - tflint --version
+        - ansible --version
+        - ansible-lint --version
+      script:
+        # Packer tests
+        - packer validate -var-file=packer/variables.json.example packer/app.json
+        - packer validate -var-file=packer/variables.json.example packer/db.json
+        # Terraform tests
+        - cd ${TRAVIS_BUILD_DIR}/terraform/stage ; terraform init -backend=false ; terraform validate
+        - cd ${TRAVIS_BUILD_DIR}/terraform/prod  ; terraform init -backend=false ; terraform validate
+        # Tflint tests
+        - tflint ${TRAVIS_BUILD_DIR}/terraform/stage
+        - tflint ${TRAVIS_BUILD_DIR}/terraform/prod
+        # Ansible-lint tests
+        - cd ${TRAVIS_BUILD_DIR}/ansible/playbooks ; ansible-lint *
+
+      if: branch = master
 ```
 

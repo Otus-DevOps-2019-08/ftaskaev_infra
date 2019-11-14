@@ -1,9 +1,48 @@
 dist: trusty
 sudo: required
 language: bash
+
 before_install:
-- curl https://raw.githubusercontent.com/express42/otus-homeworks/2019-08/run.sh |
-  bash
+  - curl https://raw.githubusercontent.com/express42/otus-homeworks/2019-08/run.sh | bash
+
+jobs:
+  include:
+    - name: This should run only for master branch
+      install:
+        # Prepare bin directory
+        - mkdir -p ${HOME}/bin ; export PATH=${PATH}:${HOME}/bin
+        # Install terraform
+        - curl --silent --output terraform.zip https://releases.hashicorp.com/terraform/0.12.8/terraform_0.12.8_linux_amd64.zip
+        - unzip terraform.zip -d ${HOME}/bin
+        - chmod +x ${HOME}/bin/terraform
+        # Install tflint
+        - curl --silent -L --output tflint.zip https://github.com/terraform-linters/tflint/releases/download/v0.12.1/tflint_linux_amd64.zip
+        - unzip tflint.zip -d ${HOME}/bin
+        - chmod +x ${HOME}/bin/tflint
+        # Install ansible and ansible-lint
+        - pip install --user ansible
+        - pip install --user ansible-lint
+      before_script:
+        - packer --version
+        - terraform --version
+        - tflint --version
+        - ansible --version
+        - ansible-lint --version
+      script:
+        # Packer tests
+        - packer validate -var-file=packer/variables.json.example packer/app.json
+        - packer validate -var-file=packer/variables.json.example packer/db.json
+        # Terraform tests
+        - cd ${TRAVIS_BUILD_DIR}/terraform/stage ; terraform init -backend=false ; terraform validate
+        - cd ${TRAVIS_BUILD_DIR}/terraform/prod  ; terraform init -backend=false ; terraform validate
+        # Tflint tests
+        - tflint ${TRAVIS_BUILD_DIR}/terraform/stage
+        - tflint ${TRAVIS_BUILD_DIR}/terraform/prod
+        # Ansible-lint tests
+        - cd ${TRAVIS_BUILD_DIR}/ansible/playbooks ; ansible-lint *
+
+      if: branch = master
+
 notifications:
   slack:
     rooms:
