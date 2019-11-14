@@ -2,11 +2,12 @@ dist: trusty
 sudo: required
 language: bash
 
-before_install:
-  - curl https://raw.githubusercontent.com/express42/otus-homeworks/2019-08/run.sh | bash
-
 jobs:
   include:
+    - name: OTUS default tests
+      before_install:
+        - curl https://raw.githubusercontent.com/express42/otus-homeworks/2019-08/run.sh | bash
+
     - name: This should run only for master branch
       install:
         # Prepare bin directory
