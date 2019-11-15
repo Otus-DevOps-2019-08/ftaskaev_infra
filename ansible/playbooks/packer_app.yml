@@ -5,7 +5,7 @@
 
   tasks:
     - name: Install ruby, rubygems and required packages
-      apt: 
+      apt:
         name: ['ruby-full', 'ruby-bundler', 'build-essential']
         state: present
 

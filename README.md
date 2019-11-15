@@ -494,7 +494,8 @@ reddit-db | SUCCESS => {
 Ansible: управление настройками хостов и деплой приложения при помощи Ansible.  
 PR: [Otus-DevOps-2019-08/ftaskaev_infra#9](https://github.com/Otus-DevOps-2019-08/ftaskaev_infra/pull/9)
 
-# Основное задание
+<details>
+  <summary>Основное задание</summary>
 
  * В ходе выполнения ДЗ были написаны playbook'и для развёртывания БД и приложения reddit.
  * Provisioners для packer'а были заменены на ansible, с их помощью пересобраны образы VM.
@@ -551,8 +552,10 @@ PLAY RECAP *********************************************************************
 appserver                  : ok=9    changed=7    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
 dbserver                   : ok=3    changed=2    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
 ```
+</details>
 
-# Дополнительное задание
+<details>
+  <summary>Дополнительное задание</summary>
 
 Для dynamic inventory воспользуемся модулем [gcp_compute](https://docs.ansible.com/ansible/latest/plugins/inventory/gcp_compute.html).  
 Статья на тему: [How to use Ansible GCP compute inventory plugin](http://matthieure.me/2018/12/31/ansible_inventory_plugin.html).  
@@ -610,3 +613,117 @@ enable_plugins = gcp_compute
 ```django
 DATABASE_URL={{ hostvars['reddit-db'].networkInterfaces[0].networkIP }}
 ```
+</details>
+
+## Lesson 12: homework 10
+Ansible: написание ролей для управления конфигурацией сервисов и настройками хостов.  
+PR: [Otus-DevOps-2019-08/ftaskaev_infra#11](https://github.com/Otus-DevOps-2019-08/ftaskaev_infra/pull/11)
+
+# Самостоятельное задание
+
+В GCE по умолчанию есть правило для открытия HTTP/HTTPS. Чтобы оно применялось к инстансу reddit-app, достаточно добавить тег `web-host` в модуль `terraform/modules/app/main.tf`:
+
+```diff
+resource "google_compute_instance" "app" {
+   name         = "reddit-app"
+   machine_type = "g1-small"
+   zone         = var.zone
+-  tags         = ["reddit-app"]
++  tags         = ["reddit-app", "web-host"]
+   boot_disk {
+     initialize_params { image = var.app_disk_image }
+   }
+```
+
+Добавляем роль `jdauphant.nginx` в `playbooks/app.yml`:
+
+```console
+---
+- name: Configure App
+  hosts: app
+  become: true
+
+  roles:
+    - app
+    - jdauphant.nginx
+```
+
+# Дополнительное задание №1
+
+Для dynamic inventory воспользуемся модулем [gcp_compute](https://docs.ansible.com/ansible/latest/plugins/inventory/gcp_compute.html).  
+В дополнение к предыдущему заданию добавим разбивку хостов по группам:
+
+```console
+plugin: gcp_compute
+projects:
+  - [ YOUR-PROJECT-ID ]
+auth_kind: serviceaccount
+service_account_file: /Users/me/sa-ansible-dynamic-inventory.json
+hostnames:
+  - name
+compose:
+  ansible_host: networkInterfaces[0].accessConfigs[0].natIP
+
+groups:
+  app: "'-app' in name"
+  db: "'-db' in name"
+```
+Проверим:
+
+```console
+$ ansible-inventory --graph
+@all:
+  |--@app:
+  |  |--reddit-app
+  |--@db:
+  |  |--reddit-db
+  |--@ungrouped:
+```
+
+Скопируем файл в `ansible/environments/prod/otus-devops-infra.gcp.yml` и `ansible/environments/prod/otus-devops-infra.gcp.yml`. 
+
+# Дополнительное задание №2
+
+Для отладки тестов TravisCI утилитой trytravis необходимо было сделать fork репозитория и переименовать его в `trytravis_ftaskaev_infra`.  
+В `.travis.yml` добавим задание, которое будет срабатывать по условию `if: branch = master`:
+
+```yaml
+jobs:
+  include:
+    - name: This should run only for master branch
+      install:
+        # Prepare bin directory
+        - mkdir -p ${HOME}/bin ; export PATH=${PATH}:${HOME}/bin
+        # Install terraform
+        - curl --silent --output terraform.zip https://releases.hashicorp.com/terraform/0.12.8/terraform_0.12.8_linux_amd64.zip
+        - unzip terraform.zip -d ${HOME}/bin
+        - chmod +x ${HOME}/bin/terraform
+        # Install tflint
+        - curl --silent -L --output tflint.zip https://github.com/terraform-linters/tflint/releases/download/v0.12.1/tflint_linux_amd64.zip
+        - unzip tflint.zip -d ${HOME}/bin
+        - chmod +x ${HOME}/bin/tflint
+        # Install ansible and ansible-lint
+        - pip install --user ansible
+        - pip install --user ansible-lint
+      before_script:
+        - packer --version
+        - terraform --version
+        - tflint --version
+        - ansible --version
+        - ansible-lint --version
+      script:
+        # Packer tests
+        - packer validate -var-file=packer/variables.json.example packer/app.json
+        - packer validate -var-file=packer/variables.json.example packer/db.json
+        # Terraform tests
+        - cd ${TRAVIS_BUILD_DIR}/terraform/stage ; terraform init -backend=false ; terraform validate
+        - cd ${TRAVIS_BUILD_DIR}/terraform/prod  ; terraform init -backend=false ; terraform validate
+        # Tflint tests
+        - tflint ${TRAVIS_BUILD_DIR}/terraform/stage
+        - tflint ${TRAVIS_BUILD_DIR}/terraform/prod
+        # Ansible-lint tests
+        - cd ${TRAVIS_BUILD_DIR}/ansible/playbooks ; ansible-lint *
+
+      if: branch = master
+```
+

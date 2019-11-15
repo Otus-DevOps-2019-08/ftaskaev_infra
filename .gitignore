@@ -12,6 +12,10 @@ packer/variables.json
 
 # Ansible sensitive data
 *.gcp.yml
+vault.key
 
 # Ansible temporary files
 *.retry
+
+# Ansible community roles
+jdauphant.nginx
