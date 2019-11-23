@@ -619,7 +619,8 @@ DATABASE_URL={{ hostvars['reddit-db'].networkInterfaces[0].networkIP }}
 Ansible: написание ролей для управления конфигурацией сервисов и настройками хостов.  
 PR: [Otus-DevOps-2019-08/ftaskaev_infra#11](https://github.com/Otus-DevOps-2019-08/ftaskaev_infra/pull/11)
 
-# Самостоятельное задание
+<details>
+  <summary>Самостоятельное задание</summary>
 
 В GCE по умолчанию есть правило для открытия HTTP/HTTPS. Чтобы оно применялось к инстансу reddit-app, достаточно добавить тег `web-host` в модуль `terraform/modules/app/main.tf`:
 
@@ -647,8 +648,10 @@ resource "google_compute_instance" "app" {
     - app
     - jdauphant.nginx
 ```
+</details>
 
-# Дополнительное задание №1
+<details>
+  <summary>Дополнительное задание №1</summary>
 
 Для dynamic inventory воспользуемся модулем [gcp_compute](https://docs.ansible.com/ansible/latest/plugins/inventory/gcp_compute.html).  
 В дополнение к предыдущему заданию добавим разбивку хостов по группам:
@@ -680,9 +683,11 @@ $ ansible-inventory --graph
   |--@ungrouped:
 ```
 
-Скопируем файл в `ansible/environments/prod/otus-devops-infra.gcp.yml` и `ansible/environments/prod/otus-devops-infra.gcp.yml`. 
+Скопируем файл в `ansible/environments/prod/otus-devops-infra.gcp.yml` и `ansible/environments/prod/otus-devops-infra.gcp.yml`.
+</details>
 
-# Дополнительное задание №2
+<details>
+  <summary>Дополнительное задание №2</summary>
 
 Для отладки тестов TravisCI утилитой trytravis необходимо было сделать fork репозитория и переименовать его в `trytravis_ftaskaev_infra`.  
 В `.travis.yml` добавим задание, которое будет срабатывать по условию `if: branch = master`:
@@ -725,5 +730,29 @@ jobs:
         - cd ${TRAVIS_BUILD_DIR}/ansible/playbooks ; ansible-lint *
 
       if: branch = master
+```
+</details>
+
+## Lesson 13: homework 11
+Ansible: доработка имеющихся ролей локально с использование Vagrant.  
+Тестирование конфигурации при помощи Molecule и TestInfra.  
+PR: [Otus-DevOps-2019-08/ftaskaev_infra#12](https://github.com/Otus-DevOps-2019-08/ftaskaev_infra/pull/12)
+
+# Дополнительное задание №1
+
+Для корректной работы роли `jdauphant.nginx` необходтмо добавить в `ansible.extra_vars` переменные, которые раньше определялись в `environments/env_name/group_vars/app`:
+
+```diff
+       ansible.extra_vars = {
+-        "deploy_user" => "vagrant"
++        "deploy_user" => "vagrant",
++        "nginx_sites" => {
++          "default" => [
++            "listen 80",
++            "server_name _",
++            "location / { proxy_pass http://127.0.0.1:9292; }"
++          ]
+         }
+       }
 ```
 

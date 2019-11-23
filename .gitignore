@@ -19,3 +19,11 @@ vault.key
 
 # Ansible community roles
 jdauphant.nginx
+
+# Vagrant & molecule
+.vagrant/
+*.log
+*.pyc
+.molecule
+.cache
+.pytest_cache
