@@ -738,24 +738,6 @@ Ansible: доработка имеющихся ролей локально с и
 Тестирование конфигурации при помощи Molecule и TestInfra.  
 PR: [Otus-DevOps-2019-08/ftaskaev_infra#12](https://github.com/Otus-DevOps-2019-08/ftaskaev_infra/pull/12)
 
-# Дополнительное задание №1
-
-Для корректной работы роли `jdauphant.nginx` необходимо добавить в `ansible.extra_vars` переменные, которые раньше определялись в `environments/env_name/group_vars/app`:
-
-```diff
-       ansible.extra_vars = {
--        "deploy_user" => "vagrant"
-+        "deploy_user" => "vagrant",
-+        "nginx_sites" => {
-+          "default" => [
-+            "listen 80",
-+            "server_name _",
-+            "location / { proxy_pass http://127.0.0.1:9292; }"
-+          ]
-         }
-       }
-```
-
 Для написания тестов molecule сделаем virtualenv ansible-4:
 
 ```console
@@ -852,6 +834,24 @@ googlecompute: ERROR! the role 'db' was not found in /Users/me/gits/OTUS/ftaskae
             "ansible_env_vars": ["ANSIBLE_ROLES_PATH={{ pwd }}/ansible/roles"]
         }
     ]
+```
+
+# Дополнительное задание №1
+
+Для корректной работы роли `jdauphant.nginx` необходимо добавить в `ansible.extra_vars` переменные, которые раньше определялись в `environments/env_name/group_vars/app`:
+
+```diff
+       ansible.extra_vars = {
+-        "deploy_user" => "vagrant"
++        "deploy_user" => "vagrant",
++        "nginx_sites" => {
++          "default" => [
++            "listen 80",
++            "server_name _",
++            "location / { proxy_pass http://127.0.0.1:9292; }"
++          ]
+         }
+       }
 ```
 
 # Дополнительное задание №2
