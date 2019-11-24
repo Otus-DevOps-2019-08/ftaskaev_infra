@@ -740,7 +740,7 @@ PR: [Otus-DevOps-2019-08/ftaskaev_infra#12](https://github.com/Otus-DevOps-2019-
 
 # Дополнительное задание №1
 
-Для корректной работы роли `jdauphant.nginx` необходтмо добавить в `ansible.extra_vars` переменные, которые раньше определялись в `environments/env_name/group_vars/app`:
+Для корректной работы роли `jdauphant.nginx` необходимо добавить в `ansible.extra_vars` переменные, которые раньше определялись в `environments/env_name/group_vars/app`:
 
 ```diff
        ansible.extra_vars = {
@@ -755,4 +755,104 @@ PR: [Otus-DevOps-2019-08/ftaskaev_infra#12](https://github.com/Otus-DevOps-2019-
          }
        }
 ```
+
+Для написания тестов molecule сделаем virtualenv ansible-4:
+
+```console
+$ virtualenv ansible-4
+$ cd ansible-4
+$ . bin/activate
+```
+
+Установим зависимости:
+
+```console
+(ansible-4) $ pip install -r ../requirements.txt
+```
+
+Сделаем заготовку тестов:
+
+```console
+(ansible-4) $ molecule init scenario --scenario-name default -r db -d vagrant
+--> Initializing new scenario default...
+Initialized scenario in /Users/me/gits/OTUS/ftaskaev_infra/ansible/roles/db/molecule/default successfully.
+```
+
+```console
+$ molecule create
+$ molecule list
+--> Validating schema /Users/me/gits/OTUS/ftaskaev_infra/ansible/roles/db/molecule/default/molecule.yml.
+Validation completed successfully.
+Instance Name    Driver Name    Provisioner Name    Scenario Name    Created    Converged
+---------------  -------------  ------------------  ---------------  ---------  -----------
+instance         vagrant        ansible             default          true       false
+```
+
+# Самостоятельная работа
+
+Добавим тест для проверки открытости порта 27017:
+
+```python
+# check if MongoDB is listening port 27017
+def test_mongo_listen_port(host):
+    mongo_port = host.socket("tcp://0.0.0.0:27017")
+    assert mongo_port.is_listening
+```
+
+Тест проходит упешно:
+
+```console
+$ molecule verify
+--> Validating schema /Users/me/gits/OTUS/ftaskaev_infra/ansible/roles/db/molecule/default/molecule.yml.
+Validation completed successfully.
+--> Test matrix
+
+└── default
+    └── verify
+
+--> Scenario: 'default'
+--> Action: 'verify'
+--> Executing Testinfra tests found in /Users/me/gits/OTUS/ftaskaev_infra/ansible/roles/db/molecule/default/tests/...
+    ============================= test session starts ==============================
+    platform darwin -- Python 2.7.16, pytest-4.6.6, py-1.8.0, pluggy-0.13.1
+    rootdir: /Users/me/gits/OTUS/ftaskaev_infra/ansible/roles/db/molecule/default
+    plugins: testinfra-3.2.1
+collected 3 items
+
+    tests/test_default.py ...                                                [100%]
+
+    =========================== 3 passed in 1.51 seconds ===========================
+Verifier completed successfully.
+```
+
+При использовании в плейбуке packer_db.yml роли db получаем ошибку:
+
+```console
+googlecompute: ERROR! the role 'db' was not found in /Users/me/gits/OTUS/ftaskaev_infra/ansible/playbooks/roles:/Users/me/.ansible/roles:/usr/share/ansible/roles:/etc/ansible/roles:/Users/me/gits/OTUS/ftaskaev_infra/ansible/playbooks
+```
+
+Для решения можно указать переменную окружения ansible ANSIBLE_ROLES_PATH. Итоговые провиженеры будут выглядить следующим образом:
+
+```json
+    "provisioners": [
+        {
+            "type": "ansible",
+            "playbook_file": "ansible/playbooks/packer_db.yml",
+            "extra_arguments": ["--tags", "install"],
+            "ansible_env_vars": ["ANSIBLE_ROLES_PATH={{ pwd }}/ansible/roles"]
+        }
+    ]
+```
+```json
+    "provisioners": [
+        {
+            "type": "ansible",
+            "playbook_file": "ansible/playbooks/packer_app.yml",
+            "extra_arguments": ["--tags", "install"],
+            "ansible_env_vars": ["ANSIBLE_ROLES_PATH={{ pwd }}/ansible/roles"]
+        }
+    ]
+```
+
+# Дополнительное задание №2
 
